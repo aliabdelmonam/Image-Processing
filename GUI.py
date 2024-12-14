@@ -228,11 +228,12 @@ class ImageProcessingApp:
             brightness = brightness_level.get()
             sharpness = sharpness_level.get()
             contrast = contrast_level.get()
-
+            saturation = saturation_level.get()
             # Apply all enhancements in sequence
             enhanced_img = self.processor.adjust_brightness(self.img_temp, factor=brightness)
             enhanced_img = self.processor.adjust_sharpness(enhanced_img, factor=sharpness)
             enhanced_img = self.processor.adjust_brightness(enhanced_img, factor=contrast)
+            enhanced_img = self.processor.adjust_saturation(enhanced_img, factor=saturation)
 
             self.enhanced_img = enhanced_img  # Store the latest enhanced image
             self.display_image(self.enhanced_img, enhance_image_label)
@@ -278,7 +279,19 @@ class ImageProcessingApp:
         )
         contrast_level.set(1)  # Default value
         contrast_level.pack(anchor=tk.W, pady=5)
-
+        #saturation slider
+        tk.Label(controls_frame, text="Saturation Level:").pack(anchor=tk.W, pady=5)
+        saturation_level = tk.Scale(
+            controls_frame,
+            from_=0.0,
+            to=10.0,
+            resolution=.10,
+            orient=tk.HORIZONTAL,
+            length=200,
+            command=lambda val: update_preview()
+        )
+        saturation_level.set(1)  # Default value
+        saturation_level.pack(anchor=tk.W, pady=5)
         # Buttons frame
         btn_frame = tk.Frame(controls_frame)
         btn_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=10)

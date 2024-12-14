@@ -1,4 +1,4 @@
-from PIL import Image, ImageTk, ImageFilter, ImageEnhance
+from PIL import Image, ImageTk, ImageFilter, ImageEnhance, ImageOps
 import numpy as np
 import cv2
 
@@ -39,3 +39,16 @@ class ImageProcessor:
     def adjust_sharpness(image, factor=2):
         enhancer = ImageEnhance.Sharpness(image)
         return enhancer.enhance(factor)
+
+    @staticmethod
+    def adjust_saturation(image, factor=1):
+        enhancer = ImageEnhance.Color(image)
+        return enhancer.enhance(factor)
+
+    @staticmethod
+    def apply_hist_equalization(image):
+        return ImageOps.equalize(image)
+
+    @staticmethod
+    def apply_hist_equalization(image):
+        return ImageOps.equalize(image)
