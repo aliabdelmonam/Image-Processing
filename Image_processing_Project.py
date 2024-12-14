@@ -1,4 +1,4 @@
-from PIL import Image, ImageFilter, ImageEnhance
+from PIL import Image, ImageTk, ImageFilter, ImageEnhance
 import numpy as np
 import cv2
 
@@ -20,12 +20,22 @@ class ImageProcessor:
         return image.filter(ImageFilter.GaussianBlur(radius))
 
     @staticmethod
+    def detect_edges(image):
+        img_array = np.array(image.convert('RGB'))
+        edges = cv2.Canny(img_array, 100, 200)
+        return Image.fromarray(edges)
+
+    @staticmethod
     def adjust_brightness(image, factor=1.5):
         enhancer = ImageEnhance.Brightness(image)
         return enhancer.enhance(factor)
 
     @staticmethod
-    def detect_edges(image):
-        img_array = np.array(image.convert('RGB'))
-        edges = cv2.Canny(img_array, 100, 200)
-        return Image.fromarray(edges)
+    def adjust_contrast(image,factor=1.5):
+        enhancer = ImageEnhance.Contrast(image)
+        return enhancer.enhance(factor)
+
+    @staticmethod
+    def adjust_sharpness(image, factor=2):
+        enhancer = ImageEnhance.Sharpness(image)
+        return enhancer.enhance(factor)

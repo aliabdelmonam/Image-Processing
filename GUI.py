@@ -39,7 +39,7 @@ class ImageProcessingApp:
             ("Load Image", self.load_image),
             ("Blur", self.create_blur_view),
             ("Grayscale", self.create_grayscale_view),
-            ("Brightness", self.create_brightness_view),
+            ("Enhance", self.create_enhance_view),
             ("Reset",self.create_reset_button)
         ]
 
@@ -198,64 +198,105 @@ class ImageProcessingApp:
         return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
         return_btn.pack(side=tk.RIGHT, padx=5)
 
-    def create_brightness_view(self):
+    def create_enhance_view(self):
         if not self.img:
             messagebox.showwarning("Warning", "Please load an image first!")
             return
 
-        # Create brightness processing tab
-        bright_frame = ttk.Frame(self.notebook)
-        self.notebook.add(bright_frame, text="Brightness Processing")
+        # Create enhancement processing tab
+        enhance_frame = ttk.Frame(self.notebook)
+        self.notebook.add(enhance_frame, text="Enhancement Processing")
+        self.img_temp = self.img  # Store the original image temporarily
+        self.enhanced_img = self.img.copy()  # Start with a copy for updates
+
+        # Main layout frames
+        controls_frame = tk.Frame(enhance_frame)
+        controls_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
+
+        image_frame = tk.Frame(enhance_frame)
+        image_frame.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+        # Image label for enhancement preview
+        enhance_image_label = tk.Label(image_frame)
+        enhance_image_label.pack(expand=True, fill=tk.BOTH)
+
+        # Display the initial image in the enhancement tab
+        self.display_image(self.img_temp, enhance_image_label)
+
+        # Real-time update function
+        def update_preview(*args):
+            brightness = brightness_level.get()
+            sharpness = sharpness_level.get()
+            contrast = contrast_level.get()
+
+            # Apply all enhancements in sequence
+            enhanced_img = self.processor.adjust_brightness(self.img_temp, factor=brightness)
+            enhanced_img = self.processor.adjust_sharpness(enhanced_img, factor=sharpness)
+            enhanced_img = self.processor.adjust_brightness(enhanced_img, factor=contrast)
+
+            self.enhanced_img = enhanced_img  # Store the latest enhanced image
+            self.display_image(self.enhanced_img, enhance_image_label)
 
         # Brightness slider
-        slider_frame = tk.Frame(bright_frame)
-        slider_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
-
-        tk.Label(slider_frame, text="Brightness Level:").pack(side=tk.LEFT)
+        tk.Label(controls_frame, text="Brightness Level:").pack(anchor=tk.W, pady=5)
         brightness_level = tk.Scale(
-            slider_frame,
-            from_=0.1,
-            to=2.0,
-            resolution=0.1,
+            controls_frame,
+            from_=0.0,
+            to=10.0,
+            resolution=.10,
             orient=tk.HORIZONTAL,
-            length=300
+            length=200,
+            command=lambda val: update_preview()
         )
-        brightness_level.set(1.5)  # Default value
-        brightness_level.pack(side=tk.LEFT, expand=True, fill=tk.X)
+        brightness_level.set(1)  # Default value
+        brightness_level.pack(anchor=tk.W, pady=5)
 
-        # Image label for brightness preview
-        bright_image_label = tk.Label(bright_frame)
-        bright_image_label.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+        # Sharpness slider
+        tk.Label(controls_frame, text="Sharpness Level:").pack(anchor=tk.W, pady=5)
+        sharpness_level = tk.Scale(
+            controls_frame,
+            from_=0.0,
+            to=50.0,
+            resolution=1.0,
+            orient=tk.HORIZONTAL,
+            length=200,
+            command=lambda val: update_preview()
+        )
+        sharpness_level.set(1)  # Default value
+        sharpness_level.pack(anchor=tk.W, pady=5)
+
+        # Contrast slider
+        tk.Label(controls_frame, text="Contrast Level:").pack(anchor=tk.W, pady=5)
+        contrast_level = tk.Scale(
+            controls_frame,
+            from_=0.0,
+            to=10.0,
+            resolution=.10,
+            orient=tk.HORIZONTAL,
+            length=200,
+            command=lambda val: update_preview()
+        )
+        contrast_level.set(1)  # Default value
+        contrast_level.pack(anchor=tk.W, pady=5)
 
         # Buttons frame
-        btn_frame = tk.Frame(bright_frame)
-        btn_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
-        self.display_image(self.img, bright_image_label)
-        # Apply Brightness Button
-        def apply_brightness():
-            factor = brightness_level.get()
-            brightened_image = self.processor.adjust_brightness(
-                self.img,
-                factor=factor
-            )
-            self.img = brightened_image
-            # Display brightened image
-            self.display_image(self.img, bright_image_label)
-            self.display_image(self.img, self.main_image_label)
-            # Store processed image
-            self.processed_images.append(brightened_image)
+        btn_frame = tk.Frame(controls_frame)
+        btn_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
+
+        # Save enhancements button
+        def save_enhancements():
+            self.img = self.enhanced_img.copy()  # Save the enhanced image
+            self.display_image(self.img, self.main_image_label)  # Update the main display
+            self.processed_images.append(self.img)  # Add to history
 
         # Return to Main Button
         def return_to_main():
-            # Switch to main tab
             self.notebook.select(0)
-
-            # Remove current tab
-            self.notebook.forget(bright_frame)
+            self.notebook.forget(enhance_frame)
 
         # Create buttons
-        apply_btn = tk.Button(btn_frame, text="Apply Brightness", command=apply_brightness)
-        apply_btn.pack(side=tk.LEFT, padx=5)
+        save_btn = tk.Button(btn_frame, text="Save Enhancements", command=save_enhancements)
+        save_btn.pack(side=tk.LEFT, padx=5)
 
         return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
         return_btn.pack(side=tk.RIGHT, padx=5)
