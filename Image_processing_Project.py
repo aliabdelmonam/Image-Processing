@@ -50,5 +50,8 @@ class ImageProcessor:
         return ImageOps.equalize(image)
 
     @staticmethod
-    def apply_padding(image,left=0,top=0,right=0,bottom=0,color=(0,0,0)):
-        return ImageOps.expand(image,left,top,right,bottom,fill=color)
+    def apply_padding(image,left=0,top=0,right=0,bottom=0,fill=None):
+        if fill is None:
+            fill = (0, 0, 0)
+        padded_img = ImageOps.expand(image, (left, top, right, bottom), fill=fill)
+        return padded_img
