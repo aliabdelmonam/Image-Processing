@@ -84,7 +84,7 @@ class ImageProcessingApp:
             label.config(image=photo)
             label.image = photo  # Keep a reference
 
-
+########################################################################################################################
     def create_reset_button(self):
         if not self.img:
             messagebox.showwarning("Warning", "No image to reset!")
@@ -94,9 +94,7 @@ class ImageProcessingApp:
         self.img = self.original_image
         self.display_image(self.img, self.main_image_label)
 
-
-
-
+########################################################################################################################
     def create_blur_view(self):
         if not self.img:
             messagebox.showwarning("Warning", "Please load an image first!")
@@ -158,6 +156,7 @@ class ImageProcessingApp:
         return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
         return_btn.pack(side=tk.RIGHT, padx=5)
 
+########################################################################################################################
     def create_grayscale_view(self):
         if not self.img:
             messagebox.showwarning("Warning", "Please load an image first!")
@@ -201,6 +200,7 @@ class ImageProcessingApp:
         return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
         return_btn.pack(side=tk.RIGHT, padx=5)
 
+########################################################################################################################
     def create_enhance_view(self):
         if not self.img:
             messagebox.showwarning("Warning", "Please load an image first!")
@@ -317,6 +317,7 @@ class ImageProcessingApp:
         return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
         return_btn.pack(side=tk.RIGHT, padx=5)
 
+########################################################################################################################
     def create_hist_label (self):
         if not self.img:
             messagebox.showwarning("Warning", "Please load an image first!")
@@ -358,7 +359,7 @@ class ImageProcessingApp:
         return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
         return_btn.pack(side=tk.RIGHT, padx=5)
 
-#####################################################################################################################3
+########################################################################################################################
     def create_padd_tab(self):
         if not self.img:
             messagebox.showwarning("Warning", "Please load an image first!")
@@ -366,39 +367,29 @@ class ImageProcessingApp:
         padd_frame = ttk.Frame(self.notebook)
         self.notebook.add(padd_frame, text="Adding Padding")
 
-        # Image label for preview
-        padd_image_label = tk.Label(padd_frame)
-        padd_image_label.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+        # Top frame for controls (Spinbox, Label, Checkboxes)
+        top_frame = tk.Frame(padd_frame)
+        top_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
 
-        # Buttons frame
-        btn_frame = tk.Frame(padd_frame)
-        btn_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
-        self.display_image(self.img, padd_image_label)
-        self.img_temp = self.img
-        self.enhanced_img = self.img.copy()
-        self.padd_color = (0, 0, 0)  # Default white color
+        # Label and Spinbox for Padding Thickness
+        tk.Label(top_frame, text="Padding Thickness:").pack(side=tk.LEFT, padx=5)
 
-        tk.Label(padd_frame, text="Padding Thickness:").pack(anchor=tk.W, pady=5)
-
-        # Create a StringVar to track spinbox value
         thickness_var = tk.StringVar(value='0')
-
-        # Spinbox with direct trace on its variable
-        thichness_spiner = tk.Spinbox(
-            padd_frame,
+        thickness_spinner = tk.Spinbox(
+            top_frame,
             from_=0,
             to=1000,
             increment=1,
             width=5,
             textvariable=thickness_var
         )
-        thichness_spiner.pack(anchor=tk.W, pady=5)
+        thickness_spinner.pack(side=tk.LEFT, padx=5)
 
-        # Check Buttons frame
-        check_frame = tk.Frame(padd_frame)
-        check_frame.pack(anchor=tk.W, pady=5)
+        # Check Buttons frame inside the top frame
+        check_frame = tk.Frame(top_frame)
+        check_frame.pack(side=tk.LEFT, padx=20)
 
-        tk.Label(check_frame, text='Position', font="Arial 12 bold").pack(side=tk.TOP)
+        tk.Label(check_frame, text='Position', font="Arial 12 bold").pack(anchor=tk.W)
 
         # Check Vars
         check_vars = {
@@ -408,7 +399,35 @@ class ImageProcessingApp:
             "right": tk.IntVar()
         }
 
-        # Create a single update function that can be called by any widget
+        # Position checkboxes
+        button_positions = [
+            ("DOWN", "down"),
+            ("UP", "up"),
+            ("LEFT", "left"),
+            ("RIGHT", "right")
+        ]
+        for text, key in button_positions:
+            tk.Checkbutton(
+                check_frame,
+                text=text,
+                variable=check_vars[key],
+                command=lambda: update_preview()
+            ).pack(anchor=tk.W)
+
+        # Image label for preview (centered, large space)
+        padd_image_label = tk.Label(padd_frame)
+        padd_image_label.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+        # Bottom frame for buttons
+        btn_frame = tk.Frame(padd_frame)
+        btn_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
+
+        self.display_image(self.img, padd_image_label)
+        self.img_temp = self.img
+        self.enhanced_img = self.img.copy()
+        self.padd_color = (0, 0, 0)  # Default black color
+
+        # Function to update the preview
         def update_preview(*args):
             try:
                 thickness = int(thickness_var.get())
@@ -430,43 +449,29 @@ class ImageProcessingApp:
         # Add trace to thickness variable
         thickness_var.trace_add('write', update_preview)
 
-        # Position checkboxes with update_preview linked directly
-        button_positions = [
-            ("DOWN", "down"),
-            ("UP", "up"),
-            ("LEFT", "left"),
-            ("RIGHT", "right")
-        ]
-
-        for text, key in button_positions:
-            tk.Checkbutton(
-                check_frame,
-                text=text,
-                variable=check_vars[key],
-                command=update_preview
-            ).pack(anchor=tk.W,pady=3)
-
+        # Color selection button
         def choose_color():
             color_code = colorchooser.askcolor(title="Choose color")[0]
             if color_code:
                 self.padd_color = color_code
                 update_preview()
 
-        # Color selection button
         choose_button = tk.Button(btn_frame, text="Choose Color", command=choose_color)
-        choose_button.pack(pady=10)
+        choose_button.pack(side=tk.LEFT, padx=5, pady=5)
 
+        # Save Enhancements button
         def save_enhancements():
             self.img = self.enhanced_img.copy()
             self.display_image(self.img, self.main_image_label)
 
+        save_btn = tk.Button(btn_frame, text="Save Enhancements", command=save_enhancements)
+        save_btn.pack(side=tk.LEFT, padx=5, pady=5)
+
+        # Return to Main button
         def return_to_main():
             self.notebook.select(0)
             self.notebook.forget(padd_frame)
 
-        # Buttons
-        save_btn = tk.Button(btn_frame, text="Save Enhancements", command=save_enhancements)
-        save_btn.pack(side=tk.LEFT, padx=5)
-
         return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
-        return_btn.pack(side=tk.RIGHT, padx=5)
+        return_btn.pack(side=tk.RIGHT, padx=5, pady=5)
+
