@@ -38,13 +38,15 @@ class ImageProcessingApp:
         # Action Buttons
         buttons = [
             ("Load Image", self.load_image),
-            ("Blur", self.create_blur_view),
+            # ("Blur", self.create_blur_view),
             ("Grayscale", self.create_grayscale_view),
             ("Enhance", self.create_enhance_view),
-            ("Reset",self.create_reset_button),
             ("Equalization",self.create_hist_label),
             ("Padding",self.create_padd_tab),
-            ("Noise Removal",self.create_noise_removal)
+            ("Noise Removal",self.create_noise_removal),
+            ("Transformation",self.transormation),
+            ("Reset", self.create_reset_button),
+            ("Save",self.save_image_to_disk)
         ]
 
         for text, command in buttons:
@@ -96,66 +98,66 @@ class ImageProcessingApp:
         self.display_image(self.img, self.main_image_label)
 
 ########################################################################################################################
-    def create_blur_view(self):
-        if not self.img:
-            messagebox.showwarning("Warning", "Please load an image first!")
-            return
-
-        # Create blur processing tab
-        blur_frame = ttk.Frame(self.notebook)
-        self.notebook.add(blur_frame, text="Blur Processing")
-
-        # Blur intensity slider
-        slider_frame = tk.Frame(blur_frame)
-        slider_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
-
-        tk.Label(slider_frame, text="Blur Intensity:").pack(side=tk.LEFT)
-        blur_intensity = tk.Scale(
-            slider_frame,
-            from_=0,
-            to=10,
-            orient=tk.HORIZONTAL,
-            length=300
-        )
-        blur_intensity.pack(side=tk.LEFT, expand=True, fill=tk.X)
-
-        # Image label for blur preview
-        blur_image_label = tk.Label(blur_frame)
-        blur_image_label.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
-
-        # Buttons frame
-        btn_frame = tk.Frame(blur_frame)
-        btn_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
-
-        # Apply Blur Button
-        self.display_image(self.img, blur_image_label)
-        def apply_blur():
-            intensity = blur_intensity.get()
-            blurred_image = self.processor.apply_blur(
-                self.img,
-                radius=intensity
-            )
-            self.img = blurred_image
-            # Display blurred image
-            self.display_image(self.img, blur_image_label)
-            self.display_image(self.img, self.main_image_label)
-            # Store processed image
-            self.processed_images.append(blurred_image)
-
-        # Return to Main Button
-        def return_to_main():
-            # Switch to main tab
-            self.notebook.select(0)
-
-            # Remove current tab
-            self.notebook.forget(blur_frame)
-
-        # Create buttons
-        apply_btn = tk.Button(btn_frame, text="Apply Blur", command=apply_blur)
-        apply_btn.pack(side=tk.LEFT, padx=5)
-
-        return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
-        return_btn.pack(side=tk.RIGHT, padx=5)
+    # def create_blur_view(self):
+    #     if not self.img:
+    #         messagebox.showwarning("Warning", "Please load an image first!")
+    #         return
+    #
+    #     # Create blur processing tab
+    #     blur_frame = ttk.Frame(self.notebook)
+    #     self.notebook.add(blur_frame, text="Blur Processing")
+    #
+    #     # Blur intensity slider
+    #     slider_frame = tk.Frame(blur_frame)
+    #     slider_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
+    #
+    #     tk.Label(slider_frame, text="Blur Intensity:").pack(side=tk.LEFT)
+    #     blur_intensity = tk.Scale(
+    #         slider_frame,
+    #         from_=0,
+    #         to=10,
+    #         orient=tk.HORIZONTAL,
+    #         length=300
+    #     )
+    #     blur_intensity.pack(side=tk.LEFT, expand=True, fill=tk.X)
+    #
+    #     # Image label for blur preview
+    #     blur_image_label = tk.Label(blur_frame)
+    #     blur_image_label.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+    #
+    #     # Buttons frame
+    #     btn_frame = tk.Frame(blur_frame)
+    #     btn_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
+    #
+    #     # Apply Blur Button
+    #     self.display_image(self.img, blur_image_label)
+    #     def apply_blur():
+    #         intensity = blur_intensity.get()
+    #         blurred_image = self.processor.apply_blur(
+    #             self.img,
+    #             radius=intensity
+    #         )
+    #         self.img = blurred_image
+    #         # Display blurred image
+    #         self.display_image(self.img, blur_image_label)
+    #         self.display_image(self.img, self.main_image_label)
+    #         # Store processed image
+    #         self.processed_images.append(blurred_image)
+    #
+    #     # Return to Main Button
+    #     def return_to_main():
+    #         # Switch to main tab
+    #         self.notebook.select(0)
+    #
+    #         # Remove current tab
+    #         self.notebook.forget(blur_frame)
+    #
+    #     # Create buttons
+    #     apply_btn = tk.Button(btn_frame, text="Apply Blur", command=apply_blur)
+    #     apply_btn.pack(side=tk.LEFT, padx=5)
+    #
+    #     return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
+    #     return_btn.pack(side=tk.RIGHT, padx=5)
 
 ########################################################################################################################
     def create_grayscale_view(self):
@@ -175,16 +177,14 @@ class ImageProcessingApp:
         btn_frame = tk.Frame(gray_frame)
         btn_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
         self.display_image(self.img, gray_image_label)
+        self.img_temp = self.img
+        self.enhanced_img = self.img.copy()
         # Apply Grayscale Button
         def apply_grayscale():
-            grayscale_image = self.processor.apply_grayscale(self.img)
-
-            # Display grayscale image
-            self.img = grayscale_image
-            self.display_image(self.img, gray_image_label)
-            self.display_image(self.img, self.main_image_label)
+            grayscale_image = self.processor.apply_grayscale(self.img_temp)
+            self.enhanced_img = grayscale_image
+            self.display_image(grayscale_image, gray_image_label)
             # Store processed image
-            self.processed_images.append(grayscale_image)
 
         # Return to Main Button
         def return_to_main():
@@ -193,6 +193,12 @@ class ImageProcessingApp:
 
             # Remove current tab
             self.notebook.forget(gray_frame)
+        def save_enhancements():
+            self.img = self.enhanced_img.copy()
+            self.display_image(self.img, self.main_image_label)
+
+        save_btn = tk.Button(btn_frame, text="Save Enhancements", command=save_enhancements)
+        save_btn.pack(side=tk.LEFT, padx=5, pady=5)
 
         # Create buttons
         apply_btn = tk.Button(btn_frame, text="Apply Grayscale", command=apply_grayscale)
@@ -215,10 +221,10 @@ class ImageProcessingApp:
 
         # Main layout frames
         controls_frame = tk.Frame(enhance_frame)
-        controls_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
+        controls_frame.pack(side=tk.LEFT, fill=tk.Y, padx=15, pady=10)
 
         image_frame = tk.Frame(enhance_frame)
-        image_frame.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH, padx=10, pady=10)
+        image_frame.pack(side=tk.RIGHT, expand=True, fill=tk.BOTH, padx=15, pady=10)
 
         # Image label for enhancement preview
         enhance_image_label = tk.Label(image_frame)
@@ -233,6 +239,7 @@ class ImageProcessingApp:
             sharpness = sharpness_level.get()
             contrast = contrast_level.get()
             saturation = saturation_level.get()
+
             # Apply all enhancements in sequence
             enhanced_img = self.processor.adjust_brightness(self.img_temp, factor=brightness)
             enhanced_img = self.processor.adjust_sharpness(enhanced_img, factor=sharpness)
@@ -242,13 +249,13 @@ class ImageProcessingApp:
             self.enhanced_img = enhanced_img  # Store the latest enhanced image
             self.display_image(self.enhanced_img, enhance_image_label)
 
-        # Brightness slider
+        # Control labels and sliders (Using pack for consistent layout)
         tk.Label(controls_frame, text="Brightness Level:").pack(anchor=tk.W, pady=5)
         brightness_level = tk.Scale(
             controls_frame,
             from_=0.0,
             to=10.0,
-            resolution=.10,
+            resolution=0.1,
             orient=tk.HORIZONTAL,
             length=200,
             command=lambda val: update_preview()
@@ -256,7 +263,6 @@ class ImageProcessingApp:
         brightness_level.set(1)  # Default value
         brightness_level.pack(anchor=tk.W, pady=5)
 
-        # Sharpness slider
         tk.Label(controls_frame, text="Sharpness Level:").pack(anchor=tk.W, pady=5)
         sharpness_level = tk.Scale(
             controls_frame,
@@ -270,35 +276,35 @@ class ImageProcessingApp:
         sharpness_level.set(1)  # Default value
         sharpness_level.pack(anchor=tk.W, pady=5)
 
-        # Contrast slider
         tk.Label(controls_frame, text="Contrast Level:").pack(anchor=tk.W, pady=5)
         contrast_level = tk.Scale(
             controls_frame,
             from_=0.0,
             to=10.0,
-            resolution=.10,
+            resolution=0.1,
             orient=tk.HORIZONTAL,
             length=200,
             command=lambda val: update_preview()
         )
         contrast_level.set(1)  # Default value
         contrast_level.pack(anchor=tk.W, pady=5)
-        #saturation slider
+
         tk.Label(controls_frame, text="Saturation Level:").pack(anchor=tk.W, pady=5)
         saturation_level = tk.Scale(
             controls_frame,
             from_=0.0,
             to=10.0,
-            resolution=.10,
+            resolution=0.1,
             orient=tk.HORIZONTAL,
             length=200,
             command=lambda val: update_preview()
         )
         saturation_level.set(1)  # Default value
         saturation_level.pack(anchor=tk.W, pady=5)
-        # Buttons frame
+
+        # Buttons Frame at the bottom
         btn_frame = tk.Frame(controls_frame)
-        btn_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
+        btn_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=15)
 
         # Save enhancements button
         def save_enhancements():
@@ -313,10 +319,10 @@ class ImageProcessingApp:
 
         # Create buttons
         save_btn = tk.Button(btn_frame, text="Save Enhancements", command=save_enhancements)
-        save_btn.pack(side=tk.LEFT, padx=5)
+        save_btn.pack(side=tk.LEFT, padx=10)
 
         return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
-        return_btn.pack(side=tk.RIGHT, padx=5)
+        return_btn.pack(side=tk.RIGHT, padx=10)
 
 ########################################################################################################################
     def create_hist_label (self):
@@ -478,6 +484,7 @@ class ImageProcessingApp:
 
 ########################################################################################################################
     def create_noise_removal(self):
+
         if not self.img:
             messagebox.showwarning("Warning", "Please load an image first!")
             return
@@ -657,3 +664,94 @@ class ImageProcessingApp:
 
         return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
         return_btn.pack(side=tk.RIGHT, padx=5, pady=5)
+
+########################################################################################################################
+    def transormation(self):
+        if not self.img:
+            messagebox.showwarning("Warning", "Please load an image first!")
+            return
+        transform_frame = ttk.Frame(self.notebook)
+        self.notebook.add(transform_frame, text="Transformation")
+
+        top_frame = tk.Frame(transform_frame)
+        top_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
+
+        # Gaussian Blur Controls
+        tk.Label(top_frame, text="Angle:").pack(side=tk.LEFT, padx=5)
+        angle_spinner_var = tk.StringVar(value='0')
+        angle_spinner = tk.Spinbox(
+            top_frame,
+            from_=0,
+            to=360,
+            increment=2,
+            width=5,
+            textvariable=angle_spinner_var
+        )
+        angle_spinner.pack(side=tk.LEFT, pady=10)
+
+        tk.Label(top_frame, text="Scale:").pack(side=tk.LEFT, padx=5)
+        scale_spinner_var = tk.StringVar(value='1')
+        scale_spinner = tk.Spinbox(
+            top_frame,
+            from_=1,
+            to=10,
+            increment=1,
+            width=5,
+            textvariable=scale_spinner_var
+        )
+        scale_spinner.pack(side=tk.LEFT, pady=10)
+
+        transform_image_label = tk.Label(transform_frame)
+        transform_image_label.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+        # Button frame
+        btn_frame = tk.Frame(transform_frame)
+        btn_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
+
+        # Initial image setup
+        self.display_image(self.img, transform_image_label)
+        self.img_temp = self.img
+        self.enhanced_img = self.img.copy()
+
+
+        def update_preview():
+            try:
+                angle= int(angle_spinner_var.get())
+                scale= int(scale_spinner_var.get())
+                enhanced_img = self.processor.apply_transformation(self.img_temp,angle=angle,scale=scale)
+            except ValueError:
+                # messagebox.showwarning("Warning", "Invalid Values for transformation!")
+                print("Invalid Values for transformation!")
+            self.enhanced_img = enhanced_img
+            self.display_image(self.enhanced_img, transform_image_label)
+
+        scale_spinner_var.trace_add('write', lambda *args: update_preview())
+        angle_spinner_var.trace_add('write', lambda *args: update_preview())
+
+        def save_enhancements():
+            self.img = self.enhanced_img.copy()
+            self.display_image(self.img, self.main_image_label)
+
+        save_btn = tk.Button(btn_frame, text="Save Enhancements", command=save_enhancements)
+        save_btn.pack(side=tk.LEFT, padx=5, pady=5)
+
+        def return_to_main():
+            self.notebook.select(0)
+            self.notebook.forget(transform_frame)
+
+        return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
+        return_btn.pack(side=tk.RIGHT, padx=5, pady=5)
+
+########################################################################################################################
+    def save_image_to_disk(self):
+        # Open a file dialog to get the save location
+        file_path = filedialog.asksaveasfilename(defaultextension=".png",
+                                                 filetypes=[("PNG Files", "*.png"), ("JPEG Files", "*.jpg"),
+                                                            ("All Files", "*.*")])
+
+        if file_path:  # If user selects a file path
+            try:
+                self.img.save(file_path)  # Save the image
+                messagebox.showinfo("Save Image", f"Image saved successfully to {file_path}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to save image. Error: {e}")

@@ -68,3 +68,19 @@ class ImageProcessor:
         filtered = cv2.bilateralFilter(cv_image, d=d, sigmaColor=sigmacolor, sigmaSpace=sigmaspace)
         # Convert back to PIL image
         return Image.fromarray(cv2.cvtColor(filtered, cv2.COLOR_BGR2RGB))
+
+    @staticmethod
+    def apply_transformation(image,angle=0,scale=1):
+        cv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+        height, width = cv_image.shape[:2]
+
+        # Define the center of rotation
+        center = (width / 2, height / 2)
+
+        rotation_matrix = cv2.getRotationMatrix2D(center=center, angle=angle, scale=scale)
+
+        # Step 2: Apply the rotation using warpAffine
+        rotated_image = cv2.warpAffine(cv_image, rotation_matrix, (width, height))
+
+        return Image.fromarray(cv2.cvtColor(rotated_image, cv2.COLOR_BGR2RGB))
+
