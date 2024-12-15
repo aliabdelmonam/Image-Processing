@@ -43,7 +43,8 @@ class ImageProcessingApp:
             ("Enhance", self.create_enhance_view),
             ("Reset",self.create_reset_button),
             ("Equalization",self.create_hist_label),
-            ("Padding",self.create_padd_tab)
+            ("Padding",self.create_padd_tab),
+            ("Noise Removal",self.create_noise_removal)
         ]
 
         for text, command in buttons:
@@ -475,3 +476,184 @@ class ImageProcessingApp:
         return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
         return_btn.pack(side=tk.RIGHT, padx=5, pady=5)
 
+########################################################################################################################
+    def create_noise_removal(self):
+        if not self.img:
+            messagebox.showwarning("Warning", "Please load an image first!")
+            return
+
+        Noise_frame = ttk.Frame(self.notebook)
+        self.notebook.add(Noise_frame, text="Remove Noise")
+
+        # Create top frame for kernel size selections
+        top_frame = tk.Frame(Noise_frame)
+        top_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
+
+        # Gaussian Blur Controls
+        tk.Label(top_frame, text="Gaussian Kernel Size:").pack(side=tk.LEFT, padx=5)
+        gas_kernel_var = tk.StringVar(value='1')
+        gas_kernel = tk.Spinbox(
+            top_frame,
+            from_=1,
+            to=101,
+            increment=2,
+            width=5,
+            textvariable=gas_kernel_var
+        )
+        gas_kernel.pack(side=tk.LEFT, pady=10)
+
+        # Median Filter Controls
+        tk.Label(top_frame, text="Median Kernel Size:").pack(side=tk.LEFT, padx=5)
+        med_kernel_var = tk.StringVar(value='1')
+        med_kernel = tk.Spinbox(
+            top_frame,
+            from_=1,
+            to=21,
+            increment=2,
+            width=5,
+            textvariable=med_kernel_var
+        )
+        med_kernel.pack(side=tk.LEFT, pady=10)
+
+        # Bilateral Filter Controls
+        tk.Label(top_frame, text="Bilateral Sigma Color:").pack(side=tk.LEFT, padx=5)
+        bie_color_kernel_var = tk.StringVar(value='1')
+        bie_color_kernel = tk.Spinbox(
+            top_frame,
+            from_=1,
+            to=151,
+            increment=2,
+            width=5,
+            textvariable=bie_color_kernel_var
+        )
+        bie_color_kernel.pack(side=tk.LEFT, pady=10)
+
+        tk.Label(top_frame, text="Bilateral Sigma Space:").pack(side=tk.LEFT, padx=5)
+        bie_space_kernel_var = tk.StringVar(value='1')
+        bie_space_kernel = tk.Spinbox(
+            top_frame,
+            from_=1,
+            to=151,
+            increment=2,
+            width=5,
+            textvariable=bie_space_kernel_var
+        )
+        bie_space_kernel.pack(side=tk.LEFT, pady=10)
+
+        tk.Label(top_frame, text="Bilateral D:").pack(side=tk.LEFT, padx=5)
+        bie_d_kernel_var = tk.StringVar(value='1')
+        bie_d_kernel = tk.Spinbox(
+            top_frame,
+            from_=1,
+            to=151,
+            increment=2,
+            width=5,
+            textvariable=bie_d_kernel_var
+        )
+        bie_d_kernel.pack(side=tk.LEFT, pady=10)
+
+        # Image display label
+        noise_image_label = tk.Label(Noise_frame)
+        noise_image_label.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+        # Button frame
+        btn_frame = tk.Frame(Noise_frame)
+        btn_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
+
+        # Initial image setup
+        self.display_image(self.img, noise_image_label)
+        self.img_temp = self.img
+        self.enhanced_img = self.img.copy()
+
+        # Noise removal method checkboxes
+        noise_removal_frame = tk.Frame(Noise_frame)
+        noise_removal_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=10)
+
+        # Checkbox variables
+        gaussian_var = tk.BooleanVar(value=False)
+        median_var = tk.BooleanVar(value=False)
+        bilateral_var = tk.BooleanVar(value=False)
+
+        # Create checkboxes for each noise removal method
+        gaussian_check = tk.Checkbutton(
+            noise_removal_frame,
+            text="Gaussian Blur",
+            variable=gaussian_var,
+            command=lambda: update_preview()
+        )
+        gaussian_check.pack(side=tk.LEFT, padx=5)
+
+        median_check = tk.Checkbutton(
+            noise_removal_frame,
+            text="Median Filter",
+            variable=median_var,
+            command=lambda: update_preview()
+        )
+        median_check.pack(side=tk.LEFT, padx=5)
+
+        bilateral_check = tk.Checkbutton(
+            noise_removal_frame,
+            text="Bilateral Filter",
+            variable=bilateral_var,
+            command=lambda: update_preview()
+        )
+        bilateral_check.pack(side=tk.LEFT, padx=5)
+
+        def update_preview():
+            # Start with the original image
+            enhanced_img = self.img_temp.copy()
+
+            # Apply Gaussian Blur if checked
+            if gaussian_var.get():
+                try:
+                    gauassian_kernel = int(gas_kernel_var.get())
+                    enhanced_img = self.processor.apply_blur(enhanced_img, radius=gauassian_kernel)
+                except ValueError:
+                    print("Invalid Gaussian kernel size")
+
+            # Apply Median Filter if checked
+            if median_var.get():
+                try:
+                    median_kernel = int(med_kernel_var.get())
+                    enhanced_img = self.processor.apply_median_filter(enhanced_img, size=median_kernel)
+                except ValueError:
+                    print("Invalid Median kernel size")
+
+            # Apply Bilateral Filter if checked
+            if bilateral_var.get():
+                try:
+                    sigma_color = int(bie_color_kernel_var.get())
+                    sigma_space = int(bie_space_kernel_var.get())
+                    d           = int(bie_d_kernel_var.get())
+                    enhanced_img = self.processor.apply_bilateral_filter(
+                        enhanced_img,
+                        d=d,
+                        sigmacolor=sigma_color,
+                        sigmaspace=sigma_space
+                    )
+                except ValueError:
+                    print("Invalid Bilateral filter parameters")
+
+            # Update the displayed image and store the enhanced version
+            self.enhanced_img = enhanced_img
+            self.display_image(self.enhanced_img, noise_image_label)
+
+        # Trace variables to update preview when kernel sizes change
+        gas_kernel_var.trace_add('write', lambda *args: update_preview())
+        med_kernel_var.trace_add('write', lambda *args: update_preview())
+        bie_space_kernel_var.trace_add('write', lambda *args: update_preview())
+        bie_color_kernel_var.trace_add('write', lambda *args: update_preview())
+
+        def save_enhancements():
+            self.img = self.enhanced_img.copy()
+            self.display_image(self.img, self.main_image_label)
+
+        save_btn = tk.Button(btn_frame, text="Save Enhancements", command=save_enhancements)
+        save_btn.pack(side=tk.LEFT, padx=5, pady=5)
+
+        def return_to_main():
+            self.notebook.select(0)
+            self.notebook.forget(Noise_frame)
+
+        return_btn = tk.Button(btn_frame, text="Return to Main", command=return_to_main)
+        return_btn.pack(side=tk.RIGHT, padx=5, pady=5)

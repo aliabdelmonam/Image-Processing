@@ -15,9 +15,6 @@ class ImageProcessor:
     def apply_grayscale(image):
         return image.convert('L')
 
-    @staticmethod
-    def apply_blur(image, radius=5):
-        return image.filter(ImageFilter.GaussianBlur(radius))
 
     @staticmethod
     def detect_edges(image):
@@ -55,3 +52,19 @@ class ImageProcessor:
             fill = (0, 0, 0)
         padded_img = ImageOps.expand(image, (left, top, right, bottom), fill=fill)
         return padded_img
+
+    @staticmethod
+    def apply_blur(image, radius=5):
+        return image.filter(ImageFilter.GaussianBlur(radius))
+
+    @staticmethod
+    def apply_median_filter(image, size=1):
+        return image.filter(ImageFilter.MedianFilter(size=size))
+
+    @staticmethod
+    def apply_bilateral_filter(image,d=1 ,sigmacolor=1, sigmaspace=1):
+        # Convert PIL image to OpenCV format
+        cv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+        filtered = cv2.bilateralFilter(cv_image, d=d, sigmaColor=sigmacolor, sigmaSpace=sigmaspace)
+        # Convert back to PIL image
+        return Image.fromarray(cv2.cvtColor(filtered, cv2.COLOR_BGR2RGB))
